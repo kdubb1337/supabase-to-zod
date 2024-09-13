@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import type { Json } from './types';
+import { z } from "zod";
+import type { Json } from "./types";
 
 export const JsonSchema: z.ZodSchema<Json> = z.lazy(() =>
   z
@@ -74,8 +74,8 @@ export const ShopsUpdateSchema = z.object({
 });
 
 export const UserStatusSchema = z.union([
-  z.literal('ONLINE'),
-  z.literal('OFFLINE'),
+  z.literal("ONLINE"),
+  z.literal("OFFLINE"),
 ]);
 
 export const UsersInsertSchema = z.object({
@@ -121,36 +121,6 @@ export const UsersRowSchema = z.object({
   status: UserStatusSchema.nullable(),
 });
 
-export const Channels = {
-  Row: ChannelsRowSchema,
-  Insert: ChannelsInsertSchema,
-  Update: ChannelsUpdateSchema,
-};
-
-export const Messages = {
-  Row: MessagesRowSchema,
-  Insert: MessagesInsertSchema,
-  Update: MessagesUpdateSchema,
-};
-
-export const Shops = {
-  Row: ShopsRowSchema,
-  Insert: ShopsInsertSchema,
-  Update: ShopsUpdateSchema,
-};
-
-export const Users = {
-  Insert: UsersInsertSchema,
-  Update: UsersUpdateSchema,
-  Row: UsersRowSchema,
-};
-
-export const UpdatableView = {
-  Row: UpdatableViewRowSchema,
-  Insert: UpdatableViewInsertSchema,
-  Update: UpdatableViewUpdateSchema,
-};
-
 export type ChannelsRow = z.infer<typeof ChannelsRowSchema>;
 export type ChannelsInsert = z.infer<typeof ChannelsInsertSchema>;
 export type ChannelsUpdate = z.infer<typeof ChannelsUpdateSchema>;
@@ -168,3 +138,63 @@ export type NonUpdatableViewRow = z.infer<typeof NonUpdatableViewRowSchema>;
 export type UpdatableViewRow = z.infer<typeof UpdatableViewRowSchema>;
 export type UpdatableViewInsert = z.infer<typeof UpdatableViewInsertSchema>;
 export type UpdatableViewUpdate = z.infer<typeof UpdatableViewUpdateSchema>;
+
+export type Channels = {
+  Row: ChannelsRow;
+  Insert: ChannelsInsert;
+  Update: ChannelsUpdate;
+};
+
+export const ChannelsSchema = {
+  Row: ChannelsRowSchema,
+  Insert: ChannelsInsertSchema,
+  Update: ChannelsUpdateSchema,
+};
+
+export type Messages = {
+  Row: MessagesRow;
+  Insert: MessagesInsert;
+  Update: MessagesUpdate;
+};
+
+export const MessagesSchema = {
+  Row: MessagesRowSchema,
+  Insert: MessagesInsertSchema,
+  Update: MessagesUpdateSchema,
+};
+
+export type Shops = {
+  Row: ShopsRow;
+  Insert: ShopsInsert;
+  Update: ShopsUpdate;
+};
+
+export const ShopsSchema = {
+  Row: ShopsRowSchema,
+  Insert: ShopsInsertSchema,
+  Update: ShopsUpdateSchema,
+};
+
+export type Users = {
+  Insert: UsersInsert;
+  Update: UsersUpdate;
+  Row: UsersRow;
+};
+
+export const UsersSchema = {
+  Insert: UsersInsertSchema,
+  Update: UsersUpdateSchema,
+  Row: UsersRowSchema,
+};
+
+export type UpdatableView = {
+  Row: UpdatableViewRow;
+  Insert: UpdatableViewInsert;
+  Update: UpdatableViewUpdate;
+};
+
+export const UpdatableViewSchema = {
+  Row: UpdatableViewRowSchema,
+  Insert: UpdatableViewInsertSchema,
+  Update: UpdatableViewUpdateSchema,
+};

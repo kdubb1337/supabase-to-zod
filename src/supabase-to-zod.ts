@@ -135,6 +135,8 @@ function organizeSchemas(zodSchemasFile: string): string {
     }
   }
 
+  output += types.join('\n') + '\n\n';
+
   // Generate entity objects
   for (const [entity, schemaNames] of Object.entries(schemas)) {
     if (!schemaNames.length) continue;
@@ -144,14 +146,19 @@ function organizeSchemas(zodSchemasFile: string): string {
       continue;
     }
 
-    output += `export const ${entity} = {\n`;
+    output += `export type ${entity} = {\n`;
+    for (const schemaName of schemaNames) {
+      const shortName = schemaName.replace(entity, '');
+      output += `  ${shortName}: ${schemaName},\n`;
+    }
+    output += '};\n\n';
+    output += `export const ${entity}Schema = {\n`;
     for (const schemaName of schemaNames) {
       const shortName = schemaName.replace(entity, '');
       output += `  ${shortName}: ${schemaName}Schema,\n`;
     }
     output += '};\n\n';
   }
-  output += types.join('\n') + '\n';
 
   return output;
 }

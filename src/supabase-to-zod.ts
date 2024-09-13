@@ -1,7 +1,7 @@
 import { generate } from 'ts-to-zod';
 
 import fs from 'node:fs/promises';
-import { join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import prettier from 'prettier';
 
 import { z } from 'zod';
@@ -64,7 +64,11 @@ export default async function supabaseToZod(opts: SupabaseToZodOptions) {
     getImportPath(outputPath, inputPath),
   );
 
-  const organizedSchemas = organizeSchemas(zodSchemasFile);
+  const organizedSchemas = organizeSchemas(
+    zodSchemasFile,
+    inputPath,
+    outputPath,
+  );
   const prettierConfig = await prettier.resolveConfig(process.cwd());
 
   await fs.writeFile(
@@ -76,7 +80,11 @@ export default async function supabaseToZod(opts: SupabaseToZodOptions) {
   );
 }
 
-function organizeSchemas(zodSchemasFile: string): string {
+function organizeSchemas(
+  zodSchemasFile: string,
+  inputPath: string,
+  outputPath: string,
+): string {
   const lines = zodSchemasFile.split('\n');
   const schemas: Record<string, string[]> = {};
   const schemaDefinitions: string[] = [];
@@ -117,8 +125,11 @@ function organizeSchemas(zodSchemasFile: string): string {
     schemaDefinitions.push(currentSchemaDefinition);
   }
 
+  const relativeInputPath = relative(dirname(outputPath), dirname(inputPath));
+  const typesImportPath = join(relativeInputPath, 'types').replace(/\\/g, '/');
+
   let output = 'import { z } from "zod";\n';
-  output += 'import type { Json } from "./types";\n\n';
+  output += `import type { Json } from "./${typesImportPath}";\n\n`;
 
   // Add Json schema definition
   output += jsonSchemaDefinition + '\n\n';

@@ -126,7 +126,13 @@ function organizeSchemas(
   }
 
   const relativeInputPath = relative(dirname(outputPath), dirname(inputPath));
-  const typesImportPath = join(relativeInputPath, 'types').replace(/\\/g, '/');
+  const filenameWithoutExtension = inputPath
+    .split('/')
+    [inputPath.split('/').length - 1].replace('.ts', '');
+  const typesImportPath = join(
+    relativeInputPath,
+    filenameWithoutExtension,
+  ).replace(/\\/g, '/');
 
   let output = 'import { z } from "zod";\n';
   output += `import type { Json } from "./${typesImportPath}";\n\n`;

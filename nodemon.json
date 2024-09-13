@@ -1,0 +1,5 @@
+{
+  "watch": ["src/*"],
+  "ext": "ts",
+  "exec": "pnpm build && supabase-to-zod --input example/types.ts --output example/schema.ts"
+}

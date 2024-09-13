@@ -10,6 +10,7 @@ import {
   getImportPath,
   transformTypesOptionsSchema,
 } from './lib';
+import { pascalCase } from 'change-case';
 
 const simplifiedJSDocTagSchema = z.object({
   name: z.string(),
@@ -50,6 +51,7 @@ export default async function supabaseToZod(opts: SupabaseToZodOptions) {
   const parsedTypes = transformTypes({ sourceText, ...opts });
 
   const { getZodSchemasFile, errors } = generate({
+    getSchemaName: (name) => `${pascalCase(name)}Schema`,
     sourceText: parsedTypes,
     ...opts,
   });
@@ -62,13 +64,94 @@ export default async function supabaseToZod(opts: SupabaseToZodOptions) {
     getImportPath(outputPath, inputPath),
   );
 
+  const organizedSchemas = organizeSchemas(zodSchemasFile);
   const prettierConfig = await prettier.resolveConfig(process.cwd());
 
   await fs.writeFile(
     outputPath,
-    await prettier.format(zodSchemasFile, {
+    await prettier.format(organizedSchemas, {
       parser: 'babel-ts',
       ...prettierConfig,
     }),
   );
+}
+
+function organizeSchemas(zodSchemasFile: string): string {
+  const lines = zodSchemasFile.split('\n');
+  const schemas: Record<string, string[]> = {};
+  const schemaDefinitions: string[] = [];
+  const types: string[] = [];
+
+  let currentEntity = '';
+  let currentSchemaDefinition = '';
+  let jsonSchemaDefinition = '';
+
+  for (const line of lines) {
+    if (line.startsWith('export const') && line.includes('Schema')) {
+      if (currentSchemaDefinition) {
+        schemaDefinitions.push(currentSchemaDefinition);
+        currentSchemaDefinition = '';
+      }
+
+      const match = line.match(/export const (\w+)Schema/);
+      if (match) {
+        const [, name] = match;
+        if (name === 'Json') {
+          jsonSchemaDefinition = line;
+          continue;
+        }
+        currentEntity = name.replace(/(Row|Insert|Update)$/, '');
+        if (!schemas[currentEntity]) {
+          schemas[currentEntity] = [];
+        }
+        schemas[currentEntity].push(name);
+      }
+      currentSchemaDefinition = line;
+    } else if (currentSchemaDefinition) {
+      currentSchemaDefinition += '\n' + line;
+    }
+  }
+
+  // Add the last schema definition if there is one
+  if (currentSchemaDefinition) {
+    schemaDefinitions.push(currentSchemaDefinition);
+  }
+
+  let output = 'import { z } from "zod";\n';
+  output += 'import type { Json } from "./types";\n\n';
+
+  // Add Json schema definition
+  output += jsonSchemaDefinition + '\n\n';
+
+  // Add schema definitions
+  output += schemaDefinitions.join('\n\n') + '\n\n';
+
+  // Add inferred types
+  for (const [entity, schemaNames] of Object.entries(schemas)) {
+    for (const schemaName of schemaNames) {
+      types.push(
+        `export type ${schemaName} = z.infer<typeof ${schemaName}Schema>;`,
+      );
+    }
+  }
+
+  // Generate entity objects
+  for (const [entity, schemaNames] of Object.entries(schemas)) {
+    if (!schemaNames.length) continue;
+
+    // Skip case where there is only one schema
+    if (schemaNames.length === 1) {
+      continue;
+    }
+
+    output += `export const ${entity} = {\n`;
+    for (const schemaName of schemaNames) {
+      const shortName = schemaName.replace(entity, '');
+      output += `  ${shortName}: ${schemaName}Schema,\n`;
+    }
+    output += '};\n\n';
+  }
+  output += types.join('\n') + '\n';
+
+  return output;
 }
